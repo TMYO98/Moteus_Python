@@ -23,7 +23,7 @@ async def main():
     Error = 0  # Variable para el control PD
     Velocity = 0 #Usar este valor para generar friccion en el lisa
     KP = 1
-    KD = 20
+    KD = 10
     Des_Pos = 1
     Lidar_Data = 0 # Este dato vendra del lidar (Lectura por socket) y se agregara al error, para intentar prevenir al operador
     Error_Offset = 5
@@ -64,19 +64,30 @@ async def main():
 
         # Print out everything.
         #print(state)
+        
+        #########  UNCOMMENT THIS TO REACH MAX SPEED   ##########
 
         # Print out just the position register.
-        
+        # if(velocidad > 50):
+        #     velocidad = velocidad
+        # else:
+        #     velocidad = velocidad +.2 
+
+        # print(velocidad)
+        # state = await c.set_position (position=math.nan, velocity = velocidad, 
+        #                             feedforward_torque = 1, stop_position = math.nan, maximum_torque = 1,
+        #                             kp_scale =5, kd_scale =26 ,query=True)  
   
-            
-        state = await c.set_position (position=math.nan, velocity = .3, 
+        ######## AND COMMENT THE  "State" variable bellow  ###############s 
+
+        state = await c.set_position (position=math.nan, velocity = 3, 
                                     feedforward_torque = .1, stop_position = Des_Pos, maximum_torque = Torque,
                                     kp_scale =1, kd_scale =15 ,query=True)                                     
         Position = state.values[moteus.Register.POSITION] ## Trabajar con la cantidad de vueltas
         Velocity = abs(state.values[moteus.Register.VELOCITY]) ## Velocidad del motor
         Estado = state.values[moteus.Register.FAULT]
         Error = abs(Des_Pos-Position)+Lidar_Data + Error_Offset
-        Torque = (Error*KP)+(Velocity*KD*Error)
+        Torque = (Error*KP)+(Velocity*KD*Error) #Creamos friccion, permitiendo al usuario moverse un poco
         if(Estado!=0):
            await c.set_stop() 
 
